@@ -32,7 +32,7 @@
   <header class="card p-5 md:p-6">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Jurnal Trading Forex</h1>
+        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Jurnal Trading</h1>
         <p class="text-sm mt-1" style="color:var(--mute)">Unggah laporan riwayat MT5 (.html / .csv), jurnal dan statistik terisi otomatis.</p>
       </div>
       <div class="text-right">
@@ -45,9 +45,9 @@
       <div><label class="lbl" for="capital">Modal awal (Rp)</label>
         <input id="capital" type="number" min="0" step="any" value="10000000" class="field num"></div>
       <div><label class="lbl" for="repCur">Mata uang akun di laporan</label>
-        <select id="repCur" class="field"><option value="IDR"></option></select></div>
+        <select id="repCur" class="field"><option value="USD">USD (dikonversi ke Rupiah)</option><option value="IDR">IDR (sudah Rupiah)</option></select></div>
       <div><label class="lbl" for="kurs">Kurs 1 USD = Rp 18000</label>
-        <input id="kurs" type="number" min="0" step="any" value="16500" class="field num"></div>
+        <input id="kurs" type="number" min="0" step="any" value="18000" class="field num"></div>
       <div><label class="lbl" for="brokerTz">Zona waktu server broker (di laporan)</label>
         <select id="brokerTz" class="field">
           <option value="0">UTC+0</option><option value="1">UTC+1</option><option value="2">UTC+2</option>
@@ -117,7 +117,7 @@
       <div id="calBox" class="overflow-auto flex-1 min-h-0"></div>
     </div>
   </section>
-  <p class="text-xs text-center pb-4" style="color:var(--mute)">Journal Trading By IFR All Rights Reserved 2026.</p>
+  <p class="text-xs text-center pb-4" style="color:var(--mute)">Journal Trading By IFR | All Rights Resereved 2026.</p>
 </div>
 
 <script>
