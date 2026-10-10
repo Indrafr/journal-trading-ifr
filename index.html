@@ -2,23 +2,26 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<script>(function(){var t;try{t=localStorage.getItem("jt_theme")}catch(e){}document.documentElement.dataset.theme=t||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jurnal Trading Forex Otomatis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  :root{--bg:#eef2f0;--card:#fff;--ink:#14201c;--mute:#6b7a74;--line:#e1e8e5;--accent:#0f766e;--gain:#15803d;--loss:#c2413b}
+  :root{color-scheme:light;--bg:#eef2f0;--card:#fff;--ink:#14201c;--mute:#6b7a74;--line:#e1e8e5;--accent:#0f766e;--gain:#15803d;--loss:#c2413b;--th:#f7faf9;--dash:#c9d6d1;--over:#ecf7f5}
+  :root[data-theme="dark"]{color-scheme:dark;--bg:#0d1412;--card:#151f1c;--ink:#e6efeb;--mute:#8fa39b;--line:#26332f;--accent:#2dd4bf;--gain:#4ade80;--loss:#f87171;--th:#1b2723;--dash:#34453f;--over:#12302b}
+  body{transition:background .2s,color .2s}
   body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink)}
   .card{background:var(--card);border:1px solid var(--line);border-radius:18px}
-  .field{width:100%;border:1px solid var(--line);border-radius:10px;padding:.55rem .7rem;font-size:.875rem;background:#fff}
+  .field{width:100%;border:1px solid var(--line);border-radius:10px;padding:.55rem .7rem;font-size:.875rem;background:var(--card);color:var(--ink)}
   .field:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .lbl{font-size:.75rem;color:var(--mute);font-weight:600;margin-bottom:.3rem;display:block}
   .gain{color:var(--gain)} .loss{color:var(--loss)}
-  th{font-weight:600;color:var(--mute);font-size:.75rem;text-align:left;padding:.6rem .9rem;background:#f7faf9;position:sticky;top:0}
+  th{font-weight:600;color:var(--mute);font-size:.75rem;text-align:left;padding:.6rem .9rem;background:var(--th);position:sticky;top:0}
   td{padding:.55rem .9rem;white-space:nowrap;border-top:1px solid var(--line);font-size:.85rem}
   .num{font-variant-numeric:tabular-nums}
-  #drop.over{border-color:var(--accent);background:#ecf7f5}
+  #drop.over{border-color:var(--accent);background:var(--over)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -33,6 +36,7 @@
         <p class="text-sm mt-1" style="color:var(--mute)">Unggah laporan riwayat MT5 (.html / .csv), jurnal dan statistik terisi otomatis.</p>
       </div>
       <div class="text-right">
+        <button id="themeBtn" type="button" class="mb-2 rounded-full px-3 py-1.5 text-xs font-semibold border" style="border-color:var(--line)" aria-label="Ganti mode tampilan"></button>
         <div id="clock" class="text-2xl font-bold num">--:--:--</div>
         <div id="clockLabel" class="text-xs" style="color:var(--mute)">&nbsp;</div>
       </div>
@@ -51,7 +55,7 @@
   </header>
 
   <!-- Upload -->
-  <div id="drop" class="card p-5 border-2 border-dashed" style="border-color:#c9d6d1">
+  <div id="drop" class="card p-5 border-2 border-dashed" style="border-color:var(--dash)">
     <label class="lbl" for="reportFile">Pilih atau seret file laporan MT5</label>
     <input type="file" id="reportFile" accept=".html,.htm,.csv" class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-semibold file:bg-teal-700 file:text-white hover:file:bg-teal-800" style="color:var(--mute)">
     <p id="msg" class="text-sm mt-2 loss hidden"></p>
@@ -92,16 +96,24 @@
 
   <!-- Berita pasar -->
   <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="card p-5">
-      <h2 class="font-bold mb-3">Berita pasar forex</h2>
-      <div id="newsBox" class="tradingview-widget-container" style="height:520px"><div class="tradingview-widget-container__widget"></div></div>
+    <div class="card p-5 flex flex-col" style="height:34rem">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-bold">Berita pasar forex</h2>
+        <button id="newsRefresh" type="button" class="text-xs font-semibold rounded-full border px-3 py-1" style="border-color:var(--line)">Muat ulang</button>
+      </div>
+      <div id="newsBox" class="overflow-auto flex-1 min-h-0"></div>
     </div>
-    <div class="card p-5">
-      <h2 class="font-bold mb-3">Kalender ekonomi</h2>
-      <div id="calBox" class="tradingview-widget-container" style="height:520px"><div class="tradingview-widget-container__widget"></div></div>
+    <div class="card p-5 flex flex-col" style="height:34rem">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <h2 class="font-bold">Kalender ekonomi</h2>
+        <select id="impact" class="field" style="width:auto;padding:.3rem .6rem;font-size:.75rem" aria-label="Filter dampak">
+          <option value="1">Semua dampak</option><option value="2" selected>Sedang dan tinggi</option><option value="3">Tinggi saja</option>
+        </select>
+      </div>
+      <div id="calBox" class="overflow-auto flex-1 min-h-0"></div>
     </div>
   </section>
-  <p class="text-xs text-center pb-4" style="color:var(--mute)">Berita dan kalender dimuat dari TradingView, jadi butuh koneksi internet. Bukan saran investasi.</p>
+  <p class="text-xs text-center pb-4" style="color:var(--mute)">Berita: FXStreet dan Investing.com. Kalender: Forex Factory, minggu berjalan (F = prakiraan, P = sebelumnya). Butuh internet. Bukan saran investasi.</p>
 </div>
 
 <script>
@@ -120,8 +132,20 @@ $('brokerTz').value = store.get('jt_broker', '3');
 $('capital').value = store.get('jt_cap', '1000');
 ['capital','brokerTz','viewTz'].forEach(id => $(id).addEventListener('input', () => {
   store.set({capital:'jt_cap', brokerTz:'jt_broker', viewTz:'jt_view'}[id], $(id).value);
-  tick(); render();
+  tick(); render(); renderCal();
 }));
+
+// ---------- Tema ----------
+function setTheme(t){
+  document.documentElement.dataset.theme = t;
+  store.set('jt_theme', t);
+  $('themeBtn').textContent = t === 'dark' ? '☀ Mode terang' : '☾ Mode gelap';
+}
+$('themeBtn').addEventListener('click', () => {
+  setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  loadWidgets();
+});
+setTheme(document.documentElement.dataset.theme);
 
 // ---------- Jam ----------
 function tick(){
@@ -224,9 +248,9 @@ function render(){
   const lo = Math.min(...pts), hi = Math.max(...pts), span = (hi - lo) || 1;
   const X = i => 8 + i / (pts.length - 1 || 1) * 284, Y = v => 108 - (v - lo) / span * 96;
   const line = pts.map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
-  const col = total >= 0 ? '#15803d' : '#c2413b';
-  $('spark').innerHTML = `<line x1="8" x2="292" y1="${Y(0)}" y2="${Y(0)}" stroke="#c9d6d1" stroke-dasharray="3 3"/>
-    <polyline points="${line}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const col = total >= 0 ? 'var(--gain)' : 'var(--loss)';
+  $('spark').innerHTML = `<line x1="8" x2="292" y1="${Y(0)}" y2="${Y(0)}" style="stroke:var(--dash)" stroke-dasharray="3 3"/>
+    <polyline points="${line}" fill="none" style="stroke:${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
 }
 
 async function handle(file){
@@ -255,10 +279,71 @@ function widget(boxId, src, cfg){
   s.src = src; s.async = true; s.textContent = JSON.stringify(cfg);
   $(boxId).appendChild(s);
 }
-widget('newsBox', 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',
-  {feedMode: 'market', market: 'forex', colorTheme: 'light', isTransparent: true, displayMode: 'regular', width: '100%', height: '100%', locale: 'id'});
-widget('calBox', 'https://s3.tradingview.com/external-embedding/embed-widget-events.js',
-  {colorTheme: 'light', isTransparent: true, width: '100%', height: '100%', locale: 'id', importanceFilter: '-1,0,1', countryFilter: 'us,eu,gb,jp,au,ca,ch,nz,id'});
+let newsFb = false, calFb = false, calData = [];
+const FEEDS = [['FXStreet','https://www.fxstreet.com/rss/news'],['Investing.com','https://www.investing.com/rss/news_1.rss']];
+const msgBox = (el, t) => { el.innerHTML = `<p class="text-sm" style="color:var(--mute)">${t}</p>`; };
+const ago = ms => { const m = Math.max(0, Math.round((Date.now() - ms) / 60000));
+  return m < 60 ? m + ' mnt lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : Math.round(m / 1440) + ' hari lalu'; };
+const theme = () => document.documentElement.dataset.theme;
+
+// Cadangan: widget TradingView bila sumber langsung gagal dimuat
+function tvBox(id){ const b = $(id); b.classList.add('tradingview-widget-container'); b.innerHTML = '<div class="tradingview-widget-container__widget"></div>'; }
+function widgetNews(){ tvBox('newsBox');
+  widget('newsBox', 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',
+    {feedMode: 'market', market: 'forex', colorTheme: theme(), isTransparent: true, displayMode: 'regular', width: '100%', height: '100%', locale: 'id'}); }
+function widgetCal(){ tvBox('calBox');
+  widget('calBox', 'https://s3.tradingview.com/external-embedding/embed-widget-events.js',
+    {colorTheme: theme(), isTransparent: true, width: '100%', height: '100%', locale: 'id', importanceFilter: '-1,0,1', countryFilter: 'us,eu,gb,jp,au,ca,ch,nz,id'}); }
+function loadWidgets(){ if(newsFb) widgetNews(); if(calFb) widgetCal(); }
+
+async function loadNews(){
+  const box = $('newsBox'); newsFb = false; box.classList.remove('tradingview-widget-container'); msgBox(box, 'Memuat berita...');
+  const res = await Promise.allSettled(FEEDS.map(async ([src, url]) => {
+    const j = await (await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(url))).json();
+    if(j.status !== 'ok') throw new Error('feed');
+    return j.items.map(i => ({src, title: i.title, link: i.link, ts: Date.parse(String(i.pubDate).replace(' ', 'T') + 'Z')}));
+  }));
+  const items = res.flatMap(r => r.status === 'fulfilled' ? r.value : []).filter(i => /^https?:/.test(i.link)).sort((a, b) => b.ts - a.ts).slice(0, 30);
+  if(!items.length){ newsFb = true; widgetNews(); return; }
+  box.innerHTML = items.map(i => `<a href="${esc(i.link)}" target="_blank" rel="noopener noreferrer" class="block py-3 border-t first:border-t-0" style="border-color:var(--line)">
+    <div class="flex gap-2 text-xs mb-1" style="color:var(--mute)"><span class="font-semibold" style="color:var(--accent)">${esc(i.src)}</span><span>${isNaN(i.ts) ? '' : ago(i.ts)}</span></div>
+    <div class="text-sm font-semibold leading-snug">${esc(i.title)}</div></a>`).join('');
+}
+
+async function loadCal(){
+  const box = $('calBox'); calFb = false; box.classList.remove('tradingview-widget-container'); msgBox(box, 'Memuat kalender...');
+  try{
+    const r = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json');
+    if(!r.ok) throw new Error('cal');
+    calData = (await r.json()).map(e => ({...e, ms: Date.parse(e.date)})).filter(e => !isNaN(e.ms)).sort((a, b) => a.ms - b.ms);
+    if(!calData.length) throw new Error('empty');
+    renderCal();
+  }catch(e){ calFb = true; widgetCal(); }
+}
+
+function renderCal(){
+  if(calFb || !calData.length) return;
+  const min = +$('impact').value, lvl = {High: 3, Medium: 2, Low: 1}, tz = $('viewTz').value, now = Date.now();
+  let html = '', day = '';
+  for(const e of calData){
+    const l = lvl[e.impact] || 0; if(l < min) continue;
+    const d = local(e.ms).slice(0, 10);
+    if(d !== day){ day = d;
+      html += `<div class="text-xs font-bold pt-3 pb-1 sticky top-0" style="background:var(--card)">${new Date(e.ms).toLocaleDateString('id-ID', {timeZone: tz, weekday: 'long', day: 'numeric', month: 'long'})}</div>`; }
+    const dot = l === 3 ? 'var(--loss)' : l === 2 ? '#d97706' : 'var(--dash)';
+    html += `<div class="flex items-start gap-3 py-2 border-t text-sm" style="border-color:var(--line);${e.ms < now ? 'opacity:.55' : ''}">
+      <span class="num w-11 shrink-0" style="color:var(--mute)">${local(e.ms).slice(11, 16)}</span>
+      <span class="mt-1.5 w-2 h-2 rounded-full shrink-0" style="background:${dot}" title="Dampak ${esc(e.impact)}"></span>
+      <span class="font-bold w-9 shrink-0">${esc(e.country)}</span>
+      <span class="flex-1 min-w-0">${esc(e.title)}</span>
+      <span class="num text-xs text-right shrink-0" style="color:var(--mute)">${e.forecast ? 'F ' + esc(e.forecast) : ''}${e.previous ? '<br>P ' + esc(e.previous) : ''}</span></div>`;
+  }
+  $('calBox').innerHTML = html || '<p class="text-sm" style="color:var(--mute)">Tidak ada event dengan filter ini.</p>';
+}
+
+$('impact').addEventListener('change', renderCal);
+$('newsRefresh').addEventListener('click', () => { loadNews(); loadCal(); });
+loadNews(); loadCal();
 </script>
 </body>
 </html>
