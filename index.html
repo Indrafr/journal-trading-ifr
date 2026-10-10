@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){var t;try{t=localStorage.getItem("jt_theme")}catch(e){}document.documentElement.dataset.theme=t||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jurnal Trading Forex IFR</title>
+<title>Jurnal Trading Forex By IFR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -41,9 +41,13 @@
         <div id="clockLabel" class="text-xs" style="color:var(--mute)">&nbsp;</div>
       </div>
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
-      <div><label class="lbl" for="capital">Modal awal (IDR)</label>
-        <input id="capital" type="number" min="0" step="any" value="1000" class="field num"></div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
+      <div><label class="lbl" for="capital">Modal awal (Rp)</label>
+        <input id="capital" type="number" min="0" step="any" value="10000000" class="field num"></div>
+      <div><label class="lbl" for="repCur">Mata uang akun di laporan</label>
+        <select id="repCur" class="field"><option value="USD">USD (dikonversi ke Rupiah)</option><option value="IDR">IDR (sudah Rupiah)</option></select></div>
+      <div><label class="lbl" for="kurs">Kurs 1 USD = Rp (ubah sesuai kurs Anda)</label>
+        <input id="kurs" type="number" min="0" step="any" value="16500" class="field num"></div>
       <div><label class="lbl" for="brokerTz">Zona waktu server broker (di laporan)</label>
         <select id="brokerTz" class="field">
           <option value="0">UTC+0</option><option value="1">UTC+1</option><option value="2">UTC+2</option>
@@ -63,7 +67,7 @@
 
   <!-- Statistik -->
   <section id="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-3 hidden">
-    <div class="card p-4"><p class="lbl">P/L bersih</p><p id="sPl" class="text-2xl font-bold num">$0.00</p></div>
+    <div class="card p-4"><p class="lbl">P/L bersih</p><p id="sPl" class="text-2xl font-bold num">Rp 0</p></div>
     <div class="card p-4"><p class="lbl">Return dari modal awal</p><p id="sPct" class="text-2xl font-bold num">0%</p><p id="sEq" class="text-xs mt-1 num" style="color:var(--mute)"></p></div>
     <div class="card p-4"><p class="lbl">Win rate</p><p id="sWin" class="text-2xl font-bold num">0%</p><p id="sWL" class="text-xs mt-1 num" style="color:var(--mute)"></p></div>
     <div class="card p-4"><p class="lbl">Total transaksi</p><p id="sN" class="text-2xl font-bold num">0</p><p id="sPf" class="text-xs mt-1 num" style="color:var(--mute)"></p></div>
@@ -78,7 +82,7 @@
     <div class="card p-5 lg:col-span-3">
       <h2 class="font-bold mb-3">Jurnal harian</h2>
       <div class="overflow-auto max-h-64">
-        <table class="w-full"><thead><tr><th>Tanggal</th><th>Trade</th><th>P/L ($)</th><th>% modal</th></tr></thead><tbody id="dayBody"></tbody></table>
+        <table class="w-full"><thead><tr><th>Tanggal</th><th>Trade</th><th>P/L (Rp)</th><th>% modal</th></tr></thead><tbody id="dayBody"></tbody></table>
       </div>
     </div>
   </section>
@@ -88,7 +92,7 @@
     <h2 class="font-bold mb-3">Riwayat transaksi <span id="tzNote" class="text-xs font-medium" style="color:var(--mute)"></span></h2>
     <div class="overflow-auto max-h-[28rem] rounded-xl border" style="border-color:var(--line)">
       <table class="min-w-full">
-        <thead><tr><th>Waktu</th><th>Order</th><th>Type</th><th>Symbol</th><th>Volume</th><th>Price</th><th>Profit ($)</th><th>% modal</th></tr></thead>
+        <thead><tr><th>Waktu</th><th>Order</th><th>Type</th><th>Symbol</th><th>Volume</th><th>Price</th><th>Profit (Rp)</th><th>% modal</th></tr></thead>
         <tbody id="tableBody"><tr><td colspan="8" class="text-center" style="color:var(--mute)">Belum ada data yang diunggah.</td></tr></tbody>
       </table>
     </div>
@@ -113,7 +117,7 @@
       <div id="calBox" class="overflow-auto flex-1 min-h-0"></div>
     </div>
   </section>
-  <p class="text-xs text-center pb-4" style="color:var(--mute)">Journal trading IFR All rights reserved 2026</p>
+  <p class="text-xs text-center pb-4" style="color:var(--mute)">Journal Trading By IFR All Rights Reserved 2026.</p>
 </div>
 
 <script>
@@ -129,11 +133,15 @@ const store = {
 ZONES.forEach(([v, t]) => $('viewTz').add(new Option(t, v)));
 $('viewTz').value = store.get('jt_view', 'Asia/Jakarta');
 $('brokerTz').value = store.get('jt_broker', '3');
-$('capital').value = store.get('jt_cap', '1000');
-['capital','brokerTz','viewTz'].forEach(id => $(id).addEventListener('input', () => {
-  store.set({capital:'jt_cap', brokerTz:'jt_broker', viewTz:'jt_view'}[id], $(id).value);
-  tick(); render(); renderCal();
+$('capital').value = store.get('jt_cap', '10000000');
+$('repCur').value = store.get('jt_cur', 'USD');
+$('kurs').value = store.get('jt_kurs', '16500');
+['capital','brokerTz','viewTz','repCur','kurs'].forEach(id => $(id).addEventListener('input', () => {
+  store.set({capital:'jt_cap', brokerTz:'jt_broker', viewTz:'jt_view', repCur:'jt_cur', kurs:'jt_kurs'}[id], $(id).value);
+  syncCur(); tick(); render(); renderCal();
 }));
+function syncCur(){ $('kurs').disabled = $('repCur').value === 'IDR'; $('kurs').style.opacity = $('kurs').disabled ? .5 : 1; }
+syncCur();
 
 // ---------- Tema ----------
 function setTheme(t){
@@ -158,7 +166,8 @@ setInterval(tick, 1000); tick();
 // ---------- Utilitas ----------
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pnum = s => parseFloat(String(s ?? '').replace(/[\s\u00a0,$]/g, '')) || 0;
-const money = n => (n < 0 ? '-$' : '$') + Math.abs(n).toFixed(2);
+const money = n => (n < 0 ? '-Rp ' : 'Rp ') + Math.round(Math.abs(n)).toLocaleString('id-ID');
+const conv = v => $('repCur').value === 'USD' ? v * pnum($('kurs').value) : v;
 const pct = n => (n > 0 ? '+' : '') + n.toFixed(2) + '%';
 const cls = n => n >= 0 ? 'gain' : 'loss';
 
@@ -214,37 +223,38 @@ function parseRows(rows){
 // ---------- Render ----------
 function render(){
   if(!trades.length) return;
+  const list = trades.map(t => ({...t, net: conv(t.net)}));
   const cap = pnum($('capital').value);
   const pc = v => cap > 0 ? pct(v / cap * 100) : '-';
-  const total = trades.reduce((s, t) => s + t.net, 0);
-  const wins = trades.filter(t => t.net > 0), losses = trades.filter(t => t.net < 0);
+  const total = list.reduce((s, t) => s + t.net, 0);
+  const wins = list.filter(t => t.net > 0), losses = list.filter(t => t.net < 0);
   const gp = wins.reduce((s, t) => s + t.net, 0), gl = Math.abs(losses.reduce((s, t) => s + t.net, 0));
 
   $('stats').classList.remove('hidden'); $('daily').classList.remove('hidden');
   $('sPl').textContent = money(total); $('sPl').className = 'text-2xl font-bold num ' + cls(total);
   $('sPct').textContent = pc(total); $('sPct').className = 'text-2xl font-bold num ' + cls(total);
   $('sEq').textContent = 'Ekuitas ' + money(cap + total);
-  $('sWin').textContent = (wins.length / trades.length * 100).toFixed(1) + '%';
+  $('sWin').textContent = (wins.length / list.length * 100).toFixed(1) + '%';
   $('sWL').textContent = wins.length + ' profit / ' + losses.length + ' loss';
-  $('sN').textContent = trades.length;
+  $('sN').textContent = list.length;
   $('sPf').textContent = 'Profit factor ' + (gl ? (gp / gl).toFixed(2) : (gp ? '∞' : '-'));
   $('tzNote').textContent = '(waktu: ' + ZONES.find(z => z[0] === $('viewTz').value)[1] + ')';
 
   // Tabel transaksi
-  $('tableBody').innerHTML = trades.map(t => `<tr>
+  $('tableBody').innerHTML = list.map(t => `<tr>
     <td class="num">${esc(local(t.utc))}</td><td class="num">${esc(t.order)}</td><td>${esc(t.type)}</td>
     <td class="font-bold">${esc(t.symbol)}</td><td class="num">${esc(t.volume)}</td><td class="num">${esc(t.price)}</td>
     <td class="num font-semibold ${cls(t.net)}">${money(t.net)}</td><td class="num ${cls(t.net)}">${pc(t.net)}</td></tr>`).join('');
 
   // Jurnal harian
   const days = {};
-  trades.forEach(t => { const k = local(t.utc).slice(0, 10); (days[k] ||= {n: 0, p: 0}); days[k].n++; days[k].p += t.net; });
+  list.forEach(t => { const k = local(t.utc).slice(0, 10); (days[k] ||= {n: 0, p: 0}); days[k].n++; days[k].p += t.net; });
   $('dayBody').innerHTML = Object.keys(days).sort().reverse().map(k => `<tr>
     <td class="num">${k}</td><td class="num">${days[k].n}</td>
     <td class="num font-semibold ${cls(days[k].p)}">${money(days[k].p)}</td><td class="num ${cls(days[k].p)}">${pc(days[k].p)}</td></tr>`).join('');
 
   // Grafik kumulatif
-  let run = 0; const pts = [0, ...trades.map(t => run += t.net)];
+  let run = 0; const pts = [0, ...list.map(t => run += t.net)];
   const lo = Math.min(...pts), hi = Math.max(...pts), span = (hi - lo) || 1;
   const X = i => 8 + i / (pts.length - 1 || 1) * 284, Y = v => 108 - (v - lo) / span * 96;
   const line = pts.map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
