@@ -4,20 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jurnal Trading Forex Sederhana</title>
-    <!-- Menggunakan Tailwind CSS untuk styling yang rapi -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Library pembaca CSV (PapaParse) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body class="bg-gray-100 font-sans p-6">
     <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow-md">
         <h1 class="text-2xl font-bold mb-4 text-gray-800">📊 Jurnal Trading Forex Otomatis</h1>
-        <p class="text-gray-600 mb-6">Unggah file laporan riwayat transaksi Anda (format CSV) dari MetaTrader 5 untuk melihat jurnal harian.</p>
+        <p class="text-gray-600 mb-6">Unggah file laporan riwayat transaksi MT5 (format .html atau .csv) untuk melihat jurnal harian.</p>
 
-        <!-- Input File CSV -->
+        <!-- Input File -->
         <div class="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Pilih File Laporan MT5 (.csv):</label>
-            <input type="file" id="csvFile" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Pilih File Laporan MT5 (.html / .csv):</label>
+            <input type="file" id="reportFile" accept=".html,.htm,.csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
         </div>
 
         <!-- Tabel Jurnal -->
@@ -44,49 +41,65 @@
     </div>
 
     <script>
-        document.getElementById('csvFile').addEventListener('change', function(e) {
+        document.getElementById('reportFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    const data = results.data;
-                    const tbody = document.getElementById('tableBody');
-                    tbody.innerHTML = '';
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const htmlContent = event.target.result;
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
 
-                    if (data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-4 text-center text-gray-400">File kosong atau format salah.</td></tr>';
-                        return;
+                // MT5 HTML report biasanya menyimpan data transaksi di dalam tabel (tag <table>)
+                // Kita cari baris-baris (tr) di dalam dokumen HTML laporan
+                const rows = doc.querySelectorAll('table tr');
+                let foundData = false;
+
+                rows.forEach((tr, index) => {
+                    const cols = tr.querySelectorAll('td');
+                    // Biasanya baris transaksi MT5 memiliki lebih dari 5 kolom
+                    if (cols.length >= 6) {
+                        const textData = Array.from(cols).map(col => col.innerText.trim());
+                        
+                        // Cek apakah baris ini berisi data transaksi (bukan header)
+                        // Contoh format MT5: Time, Order, Type, Symbol, Volume, Price, ... , Profit
+                        if (textData[0].match(/^\d{4}\.\d{2}\.\d{2}/)) {
+                            foundData = true;
+                            const time = textData[0] || '-';
+                            const order = textData[1] || '-';
+                            const type = textData[2] || '-';
+                            const symbol = textData[3] || '-';
+                            const volume = textData[4] || '-';
+                            const price = textData[5] || '-';
+                            const profit = textData[textData.length - 1] || '0'; // Biasanya profit ada di kolom terakhir
+
+                            const profitNum = parseFloat(profit.replace(/\s/g, '').replace(',', ''));
+                            const profitClass = !isNaN(profitNum) && profitNum >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold';
+
+                            const newTr = document.createElement('tr');
+                            newTr.innerHTML = `
+                                <td class="px-4 py-2 whitespace-nowrap text-gray-700">${time}</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-gray-700">${order}</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-gray-700">${type}</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-gray-700 font-bold">${symbol}</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-gray-700">${volume}</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-gray-700">${price}</td>
+                                <td class="px-4 py-2 whitespace-nowrap ${profitClass}">${profit}</td>
+                            `;
+                            tbody.appendChild(newTr);
+                        }
                     }
+                });
 
-                    data.forEach(row => {
-                        // Sesuaikan nama kolom dengan format CSV riwayat MT5 Anda
-                        const time = row['Time'] || row['Open Time'] || '-';
-                        const order = row['Order'] || '-';
-                        const type = row['Type'] || '-';
-                        const symbol = row['Symbol'] || '-';
-                        const volume = row['Volume'] || '-';
-                        const price = row['Price'] || row['Open Price'] || '-';
-                        const profit = row['Profit'] || '0';
-
-                        const profitClass = parseFloat(profit) >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold';
-
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td class="px-4 py-2 whitespace-nowrap text-gray-700">${time}</td>
-                            <td class="px-4 py-2 whitespace-nowrap text-gray-700">${order}</td>
-                            <td class="px-4 py-2 whitespace-nowrap text-gray-700">${type}</td>
-                            <td class="px-4 py-2 whitespace-nowrap text-gray-700 font-bold">${symbol}</td>
-                            <td class="px-4 py-2 whitespace-nowrap text-gray-700">${volume}</td>
-                            <td class="px-4 py-2 whitespace-nowrap text-gray-700">${price}</td>
-                            <td class="px-4 py-2 whitespace-nowrap ${profitClass}">${profit}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
+                if (!foundData) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-4 text-center text-gray-400">Format laporan tidak dikenali atau tidak ada data transaksi.</td></tr>';
                 }
-            });
+            };
+            reader.readAsText(file);
         });
     </script>
 </body>
